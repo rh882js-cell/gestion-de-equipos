@@ -279,7 +279,7 @@
 
   async function cargarComponentes() {
     try {
-      if (!db || SUPABASE_URL.includes("TU_PROJECT_ID")) {
+      if (!db || SUPABASE_URL.includes("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1cm96c2FjZ2dnYm5vbmRkZWZ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDgyNjYzMiwiZXhwIjoyMTA2NDAyNjMyfQ.LpoZu7T7UJTh_0TKEAc4XFpxvhN3pO3LRFVPH_Pf4PE")) {
         mostrarToast("Configura tus credenciales reales de Supabase", "error");
         return;
       }

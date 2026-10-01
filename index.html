@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inventario · Laboratorio Informático</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="marca">
+      <svg class="marca-icono marca-pulso" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="10" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M16 2v8M16 22v8M2 16h8M22 16h8M6 6l4 4M26 6l-4 4M6 26l4-4M26 26l-4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <p class="marca-titulo">Inventario Lab</p>
+        <p class="marca-subtitulo">Asunción Escalada</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <span class="nav-item nav-item-activo">Componentes</span>
+    </nav>
+
+    <div class="sidebar-pie">
+      <p>2.º BTI — Software y Laboratorio</p>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <header class="topbar">
+      <div>
+        <h1>Equipos y componentes</h1>
+        <p class="topbar-descripcion">Alta, edición, baja y búsqueda del stock del laboratorio.</p>
+      </div>
+      <button id="btn-nuevo" class="btn btn-primario" type="button">+ Nuevo componente</button>
+    </header>
+
+    <section class="stats">
+      <div class="stat-card">
+        <p class="stat-valor" id="stat-total">0</p>
+        <p class="stat-etiqueta">Registros totales</p>
+      </div>
+      <div class="stat-card stat-card-ok">
+        <p class="stat-valor" id="stat-disponible">0</p>
+        <p class="stat-etiqueta">Disponibles</p>
+      </div>
+      <div class="stat-card stat-card-warn">
+        <p class="stat-valor" id="stat-reparacion">0</p>
+        <p class="stat-etiqueta">En reparación</p>
+      </div>
+    </section>
+
+    <section class="filtros">
+      <input type="text" id="buscador" class="input input-buscador" placeholder="Buscar por código, nombre o marca…" autocomplete="off" />
+      <select id="filtro-categoria" class="input">
+        <option value="">Todas las categorías</option>
+      </select>
+      <select id="filtro-estado" class="input">
+        <option value="">Todos los estados</option>
+      </select>
+    </section>
+
+    <section class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Marca</th>
+            <th>Cantidad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body"></tbody>
+      </table>
+      <p id="estado-vacio" class="estado-vacio" hidden>
+        No se encontraron componentes.
+      </p>
+    </section>
+  </main>
+</div>
+
+<div id="overlay" class="overlay" hidden></div>
+
+<!-- PANEL DEDICADO SOLO A AGREGAR NUEVO COMPONENTE -->
+<aside id="panel-agregar" class="panel-form">
+  <div class="panel-form-header">
+    <h2>Nuevo componente</h2>
+    <button id="btn-cerrar-agregar" class="btn-icono" title="Cerrar" type="button">✕</button>
+  </div>
+
+  <form id="form-agregar" class="form" novalidate>
+    <div class="campo">
+      <label for="add-codigo">Código *</label>
+      <input type="text" id="add-codigo" placeholder="Ej: ARD001" required />
+    </div>
+
+    <div class="campo">
+      <label for="add-nombre">Nombre *</label>
+      <input type="text" id="add-nombre" placeholder="Ej: Arduino Uno R3" required />
+    </div>
+
+    <div class="campo-fila">
+      <div class="campo">
+        <label for="add-categoria">Categoría *</label>
+        <select id="add-categoria" required>
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="add-marca">Marca</label>
+        <input type="text" id="add-marca" placeholder="Opcional" />
+      </div>
+    </div>
+
+    <div class="campo-fila">
+      <div class="campo">
+        <label for="add-cantidad">Cantidad *</label>
+        <input type="number" id="add-cantidad" min="0" step="1" placeholder="0" value="0" required />
+      </div>
+
+      <div class="campo">
+        <label for="add-estado">Estado *</label>
+        <select id="add-estado" required>
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="add-descripcion">Descripción</label>
+      <textarea id="add-descripcion" rows="3" placeholder="Información adicional (opcional)"></textarea>
+    </div>
+
+    <div class="form-acciones">
+      <button type="button" id="btn-cancelar-agregar" class="btn btn-secundario">Cancelar</button>
+      <button type="submit" class="btn btn-primario">Agregar Componente</button>
+    </div>
+  </form>
+</aside>
+
+<!-- PANEL DEDICADO A EDITAR COMPONENTE -->
+<aside id="panel-editar" class="panel-form">
+  <div class="panel-form-header">
+    <h2>Editar componente</h2>
+    <button id="btn-cerrar-editar" class="btn-icono" title="Cerrar" type="button">✕</button>
+  </div>
+
+  <form id="form-editar" class="form" novalidate>
+    <div class="campo">
+      <label for="edit-codigo">Código *</label>
+      <input type="text" id="edit-codigo" placeholder="Ej: ARD001" required />
+    </div>
+
+    <div class="campo">
+      <label for="edit-nombre">Nombre *</label>
+      <input type="text" id="edit-nombre" placeholder="Ej: Arduino Uno R3" required />
+    </div>
+
+    <div class="campo-fila">
+      <div class="campo">
+        <label for="edit-categoria">Categoría *</label>
+        <select id="edit-categoria" required>
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="edit-marca">Marca</label>
+        <input type="text" id="edit-marca" placeholder="Opcional" />
+      </div>
+    </div>
+
+    <div class="campo-fila">
+      <div class="campo">
+        <label for="edit-cantidad">Cantidad *</label>
+        <input type="number" id="edit-cantidad" min="0" step="1" placeholder="0" required />
+      </div>
+
+      <div class="campo">
+        <label for="edit-estado">Estado *</label>
+        <select id="edit-estado" required>
+          <option value="">Seleccionar…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="edit-descripcion">Descripción</label>
+      <textarea id="edit-descripcion" rows="3" placeholder="Información adicional (opcional)"></textarea>
+    </div>
+
+    <div class="form-acciones">
+      <button type="button" id="btn-cancelar-editar" class="btn btn-secundario">Cancelar</button>
+      <button type="submit" class="btn btn-primario">Guardar Cambios</button>
+    </div>
+  </form>
+</aside>
+
+<div id="modal-confirmar" class="modal-confirmar" hidden>
+  <div class="modal-confirmar-caja">
+    <h3>¿Eliminar este componente?</h3>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="form-acciones">
+      <button id="btn-cancelar-eliminar" class="btn btn-secundario" type="button">Cancelar</button>
+      <button id="btn-confirmar-eliminar" class="btn btn-peligro" type="button">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts" class="toasts"></div>
+
+<!-- LIBRERÍA SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+  // ATENCIÓN: Reemplaza estas dos constantes con tus valores reales de Supabase
+  const SUPABASE_URL = "https://TU_PROJECT_ID.supabase.co";
+  const SUPABASE_KEY = "TU_SUPABASE_ANON_KEY";
+
+  let db = null;
+  if (window.supabase) {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+
+  const CATEGORIAS = ["Microcontroladores", "Monoplaca", "Sensores", "Actuadores", "Herramientas", "Redes y Cableado", "Otros"];
+  const ESTADOS = ["Disponible", "En uso", "En reparación", "Dado de baja"];
+
+  let componentes = [];
+  let idEditando = null;
+  let idEliminando = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    CATEGORIAS.forEach(c => {
+      $("filtro-categoria").add(new Option(c, c));
+      $("add-categoria").add(new Option(c, c));
+      $("edit-categoria").add(new Option(c, c));
+    });
+    ESTADOS.forEach(e => {
+      $("filtro-estado").add(new Option(e, e));
+      $("add-estado").add(new Option(e, e));
+      $("edit-estado").add(new Option(e, e));
+    });
+
+    cargarComponentes();
+
+    $("buscador").oninput = filtrarTabla;
+    $("filtro-categoria").onchange = filtrarTabla;
+    $("filtro-estado").onchange = filtrarTabla;
+
+    // Eventos Panel Agregar
+    $("btn-nuevo").onclick = abrirPanelAgregar;
+    $("btn-cerrar-agregar").onclick = cerrarPaneles;
+    $("btn-cancelar-agregar").onclick = cerrarPaneles;
+    $("form-agregar").onsubmit = agregarComponente;
+
+    // Eventos Panel Editar
+    $("btn-cerrar-editar").onclick = cerrarPaneles;
+    $("btn-cancelar-editar").onclick = cerrarPaneles;
+    $("form-editar").onsubmit = guardarEdicionComponente;
+
+    // Eventos Eliminar
+    $("btn-cancelar-eliminar").onclick = cerrarModal;
+    $("btn-confirmar-eliminar").onclick = ejecutarEliminacion;
+
+    $("overlay").onclick = () => { cerrarPaneles(); cerrarModal(); };
+  });
+
+  async function cargarComponentes() {
+    try {
+      if (!db || SUPABASE_URL.includes("TU_PROJECT_ID")) {
+        mostrarToast("Configura tus credenciales reales de Supabase", "error");
+        return;
+      }
+      const { data, error } = await db.from("componentes").select("*").order("id", { ascending: false });
+      if (error) throw error;
+      componentes = data || [];
+      renderizarTabla(componentes);
+      actualizarEstadisticas(componentes);
+    } catch (err) {
+      console.error("Error al cargar componentes:", err);
+      mostrarToast("Error al cargar datos: " + err.message, "error");
+    }
+  }
+
+  // --- FUNCIÓN PARA AGREGAR ---
+  async function agregarComponente(e) {
+    e.preventDefault();
+
+    const nuevoRegistro = {
+      codigo: $("add-codigo").value.trim(),
+      nombre: $("add-nombre").value.trim(),
+      categoria: $("add-categoria").value,
+      marca: $("add-marca").value.trim() || null,
+      cantidad: parseInt($("add-cantidad").value, 10) || 0,
+      estado: $("add-estado").value,
+      descripcion: $("add-descripcion").value.trim() || null
+    };
+
+    if (!nuevoRegistro.codigo || !nuevoRegistro.nombre || !nuevoRegistro.categoria || !nuevoRegistro.estado) {
+      return mostrarToast("Completa los campos obligatorios (*)", "error");
+    }
+
+    try {
+      const { data, error } = await db.from("componentes").insert([nuevoRegistro]).select();
+      if (error) throw error;
+
+      mostrarToast("Componente agregado con éxito");
+      cerrarPaneles();
+      cargarComponentes();
+    } catch (err) {
+      console.error("Error devuelto por Supabase:", err);
+      mostrarToast("Error al agregar: " + err.message, "error");
+    }
+  }
+
+  // --- FUNCIÓN PARA EDITAR ---
+  async function guardarEdicionComponente(e) {
+    e.preventDefault();
+
+    if (!idEditando) return;
+
+    const registroEditado = {
+      codigo: $("edit-codigo").value.trim(),
+      nombre: $("edit-nombre").value.trim(),
+      categoria: $("edit-categoria").value,
+      marca: $("edit-marca").value.trim() || null,
+      cantidad: parseInt($("edit-cantidad").value, 10) || 0,
+      estado: $("edit-estado").value,
+      descripcion: $("edit-descripcion").value.trim() || null
+    };
+
+    if (!registroEditado.codigo || !registroEditado.nombre || !registroEditado.categoria || !registroEditado.estado) {
+      return mostrarToast("Completa los campos obligatorios (*)", "error");
+    }
+
+    try {
+      const { error } = await db.from("componentes").update(registroEditado).eq("id", idEditando);
+      if (error) throw error;
+
+      mostrarToast("Componente actualizado con éxito");
+      cerrarPaneles();
+      cargarComponentes();
+    } catch (err) {
+      console.error("Error al actualizar:", err);
+      mostrarToast("Error al guardar cambios: " + err.message, "error");
+    }
+  }
+
+  // --- ELIMINAR ---
+  function confirmarEliminacion(id) {
+    idEliminando = id;
+    $("modal-confirmar").removeAttribute("hidden");
+    $("overlay").removeAttribute("hidden");
+  }
+
+  async function ejecutarEliminacion() {
+    if (!idEliminando) return;
+
+    try {
+      const { error } = await db.from("componentes").delete().eq("id", idEliminando);
+      if (error) throw error;
+
+      mostrarToast("Componente eliminado correctamente");
+      cerrarModal();
+      cargarComponentes();
+    } catch (err) {
+      console.error("Error al eliminar:", err);
+      mostrarToast("Error al eliminar: " + err.message, "error");
+    }
+  }
+
+  function renderizarTabla(lista) {
+    const tbody = $("tabla-body");
+    tbody.innerHTML = "";
+    
+    if (lista.length === 0) {
+      $("estado-vacio").removeAttribute("hidden");
+    } else {
+      $("estado-vacio").setAttribute("hidden", "true");
+    }
+
+    lista.forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="celda-mono">${escaparHTML(item.codigo)}</td>
+        <td><strong>${escaparHTML(item.nombre)}</strong></td>
+        <td>${escaparHTML(item.categoria)}</td>
+        <td>${escaparHTML(item.marca || "—")}</td>
+        <td>${item.cantidad}</td>
+        <td><span class="badge-estado ${obtenerClaseEstado(item.estado)}">${escaparHTML(item.estado)}</span></td>
+        <td class="celda-acciones">
+          <button class="btn-icono btn-editar" title="Editar" type="button">✏️</button>
+          <button class="btn-icono btn-icono-danger btn-eliminar" title="Eliminar" type="button">🗑️</button>
+        </td>
+      `;
+
+      tr.querySelector(".btn-editar").onclick = () => abrirPanelEditar(item);
+      tr.querySelector(".btn-eliminar").onclick = () => confirmarEliminacion(item.id);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filtrarTabla() {
+    const q = $("buscador").value.toLowerCase();
+    const cat = $("filtro-categoria").value;
+    const est = $("filtro-estado").value;
+
+    const resultado = componentes.filter(i => {
+      const coincideTexto = (i.codigo && i.codigo.toLowerCase().includes(q)) || 
+                            (i.nombre && i.nombre.toLowerCase().includes(q)) || 
+                            (i.marca && i.marca.toLowerCase().includes(q));
+      const coincideCat = !cat || i.categoria === cat;
+      const coincideEst = !est || i.estado === est;
+      return coincideTexto && coincideCat && coincideEst;
+    });
+
+    renderizarTabla(resultado);
+  }
+
+  function actualizarEstadisticas(lista) {
+    $("stat-total").textContent = lista.length;
+    $("stat-disponible").textContent = lista.filter(i => i.estado === "Disponible").length;
+    $("stat-reparacion").textContent = lista.filter(i => i.estado === "En reparación").length;
+  }
+
+  function abrirPanelAgregar() {
+    cerrarPaneles();
+    $("form-agregar").reset();
+    $("panel-agregar").classList.add("abierto");
+    $("overlay").removeAttribute("hidden");
+  }
+
+  function abrirPanelEditar(data) {
+    cerrarPaneles();
+    idEditando = data.id;
+
+    $("edit-codigo").value = data.codigo || "";
+    $("edit-nombre").value = data.nombre || "";
+    $("edit-categoria").value = data.categoria || "";
+    $("edit-marca").value = data.marca || "";
+    $("edit-cantidad").value = data.cantidad || 0;
+    $("edit-estado").value = data.estado || "";
+    $("edit-descripcion").value = data.descripcion || "";
+
+    $("panel-editar").classList.add("abierto");
+    $("overlay").removeAttribute("hidden");
+  }
+
+  function cerrarPaneles() {
+    $("panel-agregar").classList.remove("abierto");
+    $("panel-editar").classList.remove("abierto");
+    $("overlay").setAttribute("hidden", "true");
+  }
+
+  function cerrarModal() {
+    idEliminando = null;
+    $("modal-confirmar").setAttribute("hidden", "true");
+    if (!$("panel-agregar").classList.contains("abierto") && !$("panel-editar").classList.contains("abierto")) {
+      $("overlay").setAttribute("hidden", "true");
+    }
+  }
+
+  function obtenerClaseEstado(estado) {
+    if (estado === "Disponible") return "estado-disponible";
+    if (estado === "En uso") return "estado-en-uso";
+    if (estado === "En reparación") return "estado-reparacion";
+    return "estado-baja";
+  }
+
+  function mostrarToast(mensaje, tipo = "exito") {
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${tipo}`;
+    toast.textContent = mensaje;
+
+    $("toasts").appendChild(toast);
+    setTimeout(() => toast.remove(), 4500);
+  }
+
+  function escaparHTML(str) {
+    if (!str) return "";
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+</script>
+</body>
+</html>
